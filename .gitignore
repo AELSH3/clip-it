@@ -1,40 +1,24 @@
-# Python virtualenv and caches
-backend/.venv/
+# Python
 .venv/
-venv/
+backend/.venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Node
-node_modules/
-
-# Build output
-dist/
-
-# Local data, model weight caches, and large media
-data/
-.cache/
-**/huggingface/
-*.safetensors
-*.gguf
-*.pt
-*.pth
-*.onnx
-*.ckpt
-*.bin
-*.mp4
-*.mov
-*.mkv
-*.webm
-*.avi
-*.wav
-*.mp3
-
-# Secrets (.env.example is intentionally tracked)
+# Secrets
 .env
 .env.*
 !.env.example
-credentials.json
-credentials/
-*.pem
+
+# Node
+node_modules/
+dist/
+
+# Runtime data and downloaded model weights
+data/
+models/
+
+# OS
+.DS_Store
