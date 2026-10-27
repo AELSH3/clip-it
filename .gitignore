@@ -1,0 +1,40 @@
+# Python virtualenv and caches
+backend/.venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Build output
+dist/
+
+# Local data, model weight caches, and large media
+data/
+.cache/
+**/huggingface/
+*.safetensors
+*.gguf
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.bin
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.wav
+*.mp3
+
+# Secrets (.env.example is intentionally tracked)
+.env
+.env.*
+!.env.example
+credentials.json
+credentials/
+*.pem
