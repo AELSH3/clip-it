@@ -107,4 +107,4 @@ Recorded from the environment used to develop this repo (Python 3.12, macOS arm6
 - torch 2.14.1, faster-whisper 1.2.1, sentence-transformers 6.2.0, open_clip_torch 3.3.0
 - pgvector Python 0.5.1 against the pgvector 0.8.7 Postgres extension
 
-See `docs/MODEL_REPORT.md` for provenance and the fact that held-out video metrics are not claimed until an evaluation file exists.
+See `docs/MODEL_REPORT.md` for provenance. The only measured retrieval numbers are the one-query fixture run recorded there. That run does not establish generalization, and it does not show a ranker gain.

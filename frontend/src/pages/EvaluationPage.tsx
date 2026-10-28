@@ -72,6 +72,27 @@ export function EvaluationPage() {
           </tbody>
         </table>
       </div>
+      {(report.cross_video_top1 ?? []).length > 0 && (
+        <>
+          <h2 className="mt-8 font-serif text-2xl">Whole library, first hit</h2>
+          <p className="mt-2 max-w-3xl text-sm text-muted">
+            These rows search every ready video. In-video recall above only searches inside the labeled video, so a single-window clip can score a hit even when another video would rank first.
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {(report.cross_video_top1 ?? []).map((row) => (
+              <li key={row.name} className="rounded-xl border border-line px-3 py-2">
+                <span className="font-medium">{row.name}</span>
+                <span className="text-muted"> · top-1 {row.top1_accuracy.toFixed(3)}</span>
+                {row.queries.map((query) => (
+                  <span key={query.query} className="mt-1 block text-muted">
+                    “{query.query}” expected {query.expected_video}, first hit {query.top_video ?? "none"}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       <h2 className="mt-8 font-serif text-2xl">By query type</h2>
       <ul className="mt-2 text-sm text-muted">
         {(report.by_query_type ?? []).map((row) => (

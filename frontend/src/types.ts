@@ -109,6 +109,11 @@ export type EvaluationReport = {
   relevance_definition?: string;
   caveat?: string;
   methods?: EvalMethod[];
+  cross_video_top1?: {
+    name: string;
+    top1_accuracy: number;
+    queries: { query: string; expected_video: string; top_video: string | null; top1_match: boolean }[];
+  }[];
   by_query_type?: { query_type: string; method: string; recall_at_5: number; count: number }[];
   ingestion?: { videos: number; mean_seconds_per_video_minute: number | null } | null;
   ranker_improved?: boolean | null;

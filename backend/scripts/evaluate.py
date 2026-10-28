@@ -13,7 +13,7 @@ from app.config import REPO_ROOT, get_settings
 from app.db import SessionLocal
 from app.evalkit import load_jsonl
 from app.models import Video
-from app.retrieval import assert_video_disjoint, best_iou, is_relevant, ndcg_at_k, recall_at_k, split_for_video
+from app.retrieval import MODES, assert_video_disjoint, best_iou, is_relevant, ndcg_at_k, recall_at_k, split_for_video
 from app.services.search_service import search
 
 METHODS = ("keyword", "transcript_semantic", "visual", "fusion", "fusion_ranker")
@@ -36,19 +36,28 @@ def main() -> None:
             sys.exit(2)
         # The full multi-method runner compares channels by calling search in the requested mode.
         # Keyword-only and single-channel numbers use the same relevance rule.
-        mode_for = {
-            "keyword": "speech",
-            "transcript_semantic": "speech",
-            "visual": "visual",
-            "fusion": "all",
-            "fusion_ranker": "all",
+        channels_for = {
+            "keyword": {"transcript_keyword", "ocr_keyword"},
+            "transcript_semantic": {"transcript_semantic"},
+            "visual": {"visual"},
+            "fusion": set(MODES["all"]),
+            "fusion_ranker": set(MODES["all"]),
         }
         per_method: dict[str, list[dict]] = {name: [] for name in METHODS}
+        cross_rows: dict[str, list[dict]] = {name: [] for name in METHODS}
         for item in test_items:
             video = videos[item["video_key"]]
             truths = [(window["start"], window["end"]) for window in item["relevant_windows"]]
             for method in METHODS:
-                found = search(db, item["query"], mode_for[method], video.id, 10)
+                found = search(
+                    db,
+                    item["query"],
+                    "all",
+                    video.id,
+                    10,
+                    channels=channels_for[method],
+                    apply_ranker=method == "fusion_ranker",
+                )
                 flags = [
                     is_relevant((hit["start_sec"], hit["end_sec"]), truths) for hit in found["results"]
                 ]
@@ -63,6 +72,24 @@ def main() -> None:
                         "iou5": max((best_iou((hit["start_sec"], hit["end_sec"]), truths) for hit in top), default=0.0),
                         "latency_ms": found["latency_ms"],
                         "ranker_applied": found["ranker_applied"],
+                    }
+                )
+                library = search(
+                    db,
+                    item["query"],
+                    "all",
+                    None,
+                    10,
+                    channels=channels_for[method],
+                    apply_ranker=method == "fusion_ranker",
+                )
+                top_hit = library["results"][0] if library["results"] else None
+                cross_rows[method].append(
+                    {
+                        "query": item["query"],
+                        "expected_video": item["video_key"],
+                        "top_video": None if top_hit is None else top_hit["video_title"],
+                        "top1_match": bool(top_hit and top_hit["video_title"] == item["video_key"]),
                     }
                 )
         methods = []
@@ -105,8 +132,20 @@ def main() -> None:
             "split": {name: len(keys) for name, keys in data["splits"].items()},
             "query_count": len(test_items),
             "relevance_definition": data["relevance_definition"],
-            "caveat": "Held-out fixture queries only. A handful of synthetic clips does not establish generalization.",
+            "caveat": (
+                "Held-out fixture queries only. A handful of synthetic clips does not establish generalization. "
+                "In-video metrics search inside the labeled video. On this fixture each test clip is one short window, "
+                "so a method that returns that window scores a hit even when it would rank the wrong video first."
+            ),
             "methods": methods,
+            "cross_video_top1": [
+                {
+                    "name": method,
+                    "top1_accuracy": _mean(1.0 if row["top1_match"] else 0.0 for row in rows),
+                    "queries": rows,
+                }
+                for method, rows in cross_rows.items()
+            ],
             "by_query_type": by_type,
             "ingestion": None,
             "ranker_improved": improved,

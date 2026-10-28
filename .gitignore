@@ -30,7 +30,9 @@ models/
 *.webm
 *.avi
 *.wav
+*.aiff
 *.mp3
+fixtures/videos/
 
 # Secrets (.env.example is intentionally tracked)
 .env

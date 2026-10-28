@@ -95,12 +95,20 @@ def _record(bucket: dict, segment_id: str, channel: str, rank: int, similarity, 
     }
 
 
-def search(db: Session, query: str, mode: str, video_id: uuid.UUID | None, limit: int) -> dict:
+def search(
+    db: Session,
+    query: str,
+    mode: str,
+    video_id: uuid.UUID | None,
+    limit: int,
+    channels: set[str] | None = None,
+    apply_ranker: bool | None = None,
+) -> dict:
     if mode not in MODES:
         raise AppError(400, "bad_mode", "Search mode must be all, speech, screen_text, or visual.")
     settings = get_settings()
     started = time.perf_counter()
-    channels = MODES[mode]
+    channels = set(MODES[mode] if channels is None else channels)
     rankings: dict[str, list[str]] = {}
     channel_info: dict[str, dict] = {}
     notice = None
@@ -174,8 +182,8 @@ def search(db: Session, query: str, mode: str, video_id: uuid.UUID | None, limit
     runtime = ranker()
     ranker_applied = False
     rank_scores: dict[str, float] = {}
-    if runtime.available and items:
-        features = [_features(item, channel_info, mode) for item in items]
+    if runtime.available and items and apply_ranker is not False:
+        features = [_features(item, channel_info, channels) for item in items]
         scaled = [apply_scaler(row, runtime.mean, runtime.std) for row in features]
         try:
             scores = runtime.score(scaled)
@@ -281,11 +289,10 @@ def _rrf(rank: int | None, k: int) -> float:
     return 1.0 / (k + rank)
 
 
-def _features(item: dict, channel_info: dict, mode: str) -> list[float]:
+def _features(item: dict, channel_info: dict, active: set[str]) -> list[float]:
     info = channel_info.get(item["id"], {})
     settings = get_settings()
     segment: SearchSegment = item["segment"]
-    active = MODES[mode]
 
     def sim(channel: str, enabled: bool) -> tuple[float, float]:
         if not enabled:

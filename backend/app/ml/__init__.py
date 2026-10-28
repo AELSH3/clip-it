@@ -34,6 +34,17 @@ class SpeechModel:
 
     def transcribe(self, audio_path: Path) -> list[dict]:
         settings = get_settings()
+        import av
+
+        if not getattr(av.open, "_clipit_wrapped", False):
+            real_open = av.open
+
+            def open_audio(*args, **kwargs):
+                kwargs.pop("metadata_errors", None)
+                return real_open(*args, **kwargs)
+
+            open_audio._clipit_wrapped = True
+            av.open = open_audio
         with _lock:
             if self._model is None:
                 from faster_whisper import WhisperModel
