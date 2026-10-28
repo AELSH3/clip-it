@@ -1,0 +1,36 @@
+{
+  "dataset": "clipit-dev-fixture",
+  "label": "Synthetic development fixture. It verifies the pipeline only and does not establish generalization.",
+  "relevance_definition": "A returned segment is relevant when at least half of the segment lies inside a labeled interval, or the segment covers at least half of a labeled interval. Timestamp resolution is the configured window grid (default 8s windows, 4s stride), not a predicted event boundary.",
+  "splits": {
+    "train": ["lecture-deadlocks", "demo-docker"],
+    "val": ["slide-architecture"],
+    "test": ["lecture-queues"]
+  },
+  "items": [
+    {
+      "video_key": "lecture-deadlocks",
+      "query": "Where does the instructor explain deadlocks?",
+      "query_type": "speech",
+      "relevant_windows": [{"start": 0.0, "end": 8.0}]
+    },
+    {
+      "video_key": "demo-docker",
+      "query": "When does the presenter run the Docker command?",
+      "query_type": "speech",
+      "relevant_windows": [{"start": 0.0, "end": 8.0}]
+    },
+    {
+      "video_key": "slide-architecture",
+      "query": "Find the architecture diagram.",
+      "query_type": "screen_text",
+      "relevant_windows": [{"start": 0.0, "end": 8.0}]
+    },
+    {
+      "video_key": "lecture-queues",
+      "query": "Where are message queues explained?",
+      "query_type": "speech",
+      "relevant_windows": [{"start": 0.0, "end": 8.0}]
+    }
+  ]
+}

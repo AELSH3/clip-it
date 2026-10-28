@@ -1,0 +1,25 @@
+# Versions recorded from a verified install on macOS arm64, Python 3.12.12.
+# PyTorch and torchvision came from PyPI's macOS wheels. A Linux image may
+# resolve a larger CUDA build unless you use the CPU index documented in the README.
+alembic==1.20.1
+celery==5.6.3
+fastapi==0.162.0
+faster-whisper==1.2.1
+httpx==0.28.1
+numpy==2.5.4
+open_clip_torch==3.3.0
+pgvector==0.5.1
+pillow==13.0.0
+psycopg[binary]==3.3.6
+pydantic==2.14.1
+pydantic-settings==2.16.1
+pytesseract==0.3.13
+pytest==9.2.0
+python-json-logger==4.2.0
+python-multipart==0.0.32
+redis==8.1.0
+sentence-transformers==6.2.0
+SQLAlchemy==2.1.6
+torch==2.14.1
+torchvision==0.29.1
+uvicorn[standard]==0.54.0

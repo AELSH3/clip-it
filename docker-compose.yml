@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: clipit
+      POSTGRES_PASSWORD: clipit
+      POSTGRES_DB: clipit
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clipit"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      CLIPIT_DATABASE_URL: postgresql+psycopg://clipit:clipit@postgres:5432/clipit
+      CLIPIT_REDIS_URL: redis://redis:6379/0
+      CLIPIT_STORAGE_DIR: /data
+      CLIPIT_MODEL_DIR: /models
+      CLIPIT_PUBLIC_DEPLOYMENT: "true"
+      CLIPIT_AUTH_MODE: token
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - videos:/data
+      - models:/models
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+  worker:
+    build: ./backend
+    env_file: .env
+    environment:
+      CLIPIT_DATABASE_URL: postgresql+psycopg://clipit:clipit@postgres:5432/clipit
+      CLIPIT_REDIS_URL: redis://redis:6379/0
+      CLIPIT_STORAGE_DIR: /data
+      CLIPIT_MODEL_DIR: /models
+      CLIPIT_PUBLIC_DEPLOYMENT: "false"
+      CLIPIT_AUTH_MODE: local
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - videos:/data
+      - models:/models
+    command: celery -A app.workers:celery_app worker --loglevel=info
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  videos:
+  models:
