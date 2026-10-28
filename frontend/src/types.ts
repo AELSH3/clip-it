@@ -115,7 +115,12 @@ export type EvaluationReport = {
     queries: { query: string; expected_video: string; top_video: string | null; top1_match: boolean }[];
   }[];
   by_query_type?: { query_type: string; method: string; recall_at_5: number; count: number }[];
-  ingestion?: { videos: number; mean_seconds_per_video_minute: number | null } | null;
+  ingestion?: {
+    videos: number;
+    mean_seconds_per_video_minute: number | null;
+    note?: string;
+    per_video?: { title: string; duration_sec: number; processing_sec: number }[];
+  } | null;
   ranker_improved?: boolean | null;
   ranker_note?: string;
 };

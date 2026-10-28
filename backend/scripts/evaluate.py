@@ -147,7 +147,7 @@ def main() -> None:
                 for method, rows in cross_rows.items()
             ],
             "by_query_type": by_type,
-            "ingestion": None,
+            "ingestion": ingestion_from_rows(_timing_rows(videos, data["splits"])),
             "ranker_improved": improved,
             "ranker_note": "Compare fusion and fusion_ranker on this file before claiming a gain."
             if not improved
@@ -164,6 +164,47 @@ def main() -> None:
 def _mean(values) -> float:
     rows = list(values)
     return sum(rows) / len(rows) if rows else 0.0
+
+
+def _timing_rows(videos: dict, splits: dict) -> list[dict]:
+    rows = []
+    for key in splits["train"] + splits["val"] + splits["test"]:
+        video = videos.get(key)
+        if video is None or video.status != "ready":
+            continue
+        start = video.processing_started_at
+        end = video.processing_finished_at
+        elapsed = None if start is None or end is None else (end - start).total_seconds()
+        rows.append({"title": video.title, "duration_sec": video.duration_sec, "elapsed_sec": elapsed})
+    return rows
+
+
+def ingestion_from_rows(rows: list[dict]) -> dict | None:
+    usable = [
+        row
+        for row in rows
+        if row.get("duration_sec") and row.get("elapsed_sec") is not None and row["duration_sec"] > 0
+    ]
+    if not usable:
+        return None
+    total_elapsed = sum(row["elapsed_sec"] for row in usable)
+    total_minutes = sum(row["duration_sec"] for row in usable) / 60
+    return {
+        "videos": len(usable),
+        "mean_seconds_per_video_minute": round(total_elapsed / total_minutes, 1),
+        "per_video": [
+            {
+                "title": row["title"],
+                "duration_sec": round(row["duration_sec"], 3),
+                "processing_sec": round(row["elapsed_sec"], 3),
+            }
+            for row in usable
+        ],
+        "note": (
+            "Total processing seconds divided by total minutes of video, for Ready fixture clips. "
+            "The earliest jobs include first-time model downloads, so this is not a warm steady-state rate."
+        ),
+    }
 
 
 if __name__ == "__main__":

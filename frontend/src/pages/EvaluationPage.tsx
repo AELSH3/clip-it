@@ -106,7 +106,8 @@ export function EvaluationPage() {
       </p>
       {report.ingestion && (
         <p className="mt-2 text-sm text-muted">
-          Ingestion: {report.ingestion.videos} videos, mean {report.ingestion.mean_seconds_per_video_minute ?? "n/a"} seconds of processing per minute of video.
+          Ingestion: {report.ingestion.videos} videos, {report.ingestion.mean_seconds_per_video_minute ?? "n/a"} seconds of processing per minute of video.
+          {report.ingestion.note ? ` ${report.ingestion.note}` : ""}
         </p>
       )}
     </section>
